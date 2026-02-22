@@ -10,6 +10,7 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import viewsets
+import rest_framework.mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
@@ -20,9 +21,12 @@ from apps.users.api.v1.serializers import (
     PasswordResetSerializer,
     PasswordResetConfirmSerializer,
     AdminUserSerializer,
+    UserPreferencesSerializer,
 )
-from common.permissions import IsSystemAdmin
+from apps.users.models import UserPreferences
+from common.permissions import IsSystemAdmin, IsOwnerOrSystemAdmin
 from django.conf import settings
+from common.pagination import StandardResultsSetPagination
 
 User = get_user_model()
 
@@ -134,3 +138,27 @@ class PasswordResetConfirmView(APIView):
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
+
+
+class UserPreferencesViewSet(
+    rest_framework.mixins.RetrieveModelMixin,
+    rest_framework.mixins.UpdateModelMixin,
+    rest_framework.mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    User preferences API.
+    Admin can list all. Users can view/update their own.
+    Creation and deletion are disabled as preferences are auto-created.
+    """
+
+    queryset = UserPreferences.objects.all().order_by("-id")
+    serializer_class = UserPreferencesSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrSystemAdmin]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(user, "is_sysadmin", False):
+            return UserPreferences.objects.all().order_by("-id")
+        return UserPreferences.objects.filter(user=user)

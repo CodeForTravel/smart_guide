@@ -1,5 +1,8 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class CustomUserManager(BaseUserManager):
@@ -56,3 +59,39 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         if self.user_type == self.UserType.USER:
             return True
         return False
+
+
+class UserPreferences(models.Model):
+    class LanguageChoices(models.TextChoices):
+        EN = "en", "English"
+        AR = "ar", "Arabic"
+        DK = "dk", "Danish"
+        DE = "de", "German"
+        ES = "es", "Spanish"
+        FR = "fr", "French"
+        IT = "it", "Italian"
+        NL = "nl", "Dutch"
+        PT = "pt", "Portuguese"
+        RU = "ru", "Russian"
+        ZH = "zh", "Chinese"
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    language = models.CharField(max_length=2, default=LanguageChoices.EN, choices=LanguageChoices.choices)
+    notification = models.BooleanField(default=True)
+    interest_history_score = models.IntegerField(default=5, validators=[MinValueValidator(0), MaxValueValidator(10)])
+    interest_food_score = models.IntegerField(default=5, validators=[MinValueValidator(0), MaxValueValidator(10)])
+    interest_architecture_score = models.IntegerField(
+        default=5, validators=[MinValueValidator(0), MaxValueValidator(10)]
+    )
+    interest_nature_score = models.IntegerField(default=5, validators=[MinValueValidator(0), MaxValueValidator(10)])
+    narration_length_default = models.IntegerField(default=400)
+    walking_speed_estimate = models.IntegerField(default=4)  # in km/h
+
+    def __str__(self):
+        return f"{self.user.email} Preferences"
+
+
+@receiver(post_save, sender=CustomUser)
+def create_user_preferences(sender, instance, created, **kwargs):
+    if created:
+        UserPreferences.objects.create(user=instance)
