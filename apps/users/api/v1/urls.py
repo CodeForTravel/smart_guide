@@ -1,6 +1,7 @@
 from django.urls import path, re_path
 from rest_framework_simplejwt.views import TokenRefreshView
 from apps.users.api.v1.views import (
+    GoogleLogin,
     RegisterView,
     LoginView,
     LogoutView,
@@ -8,15 +9,16 @@ from apps.users.api.v1.views import (
     PasswordResetView,
     PasswordResetConfirmView,
     AdminUserViewSet,
-    GoogleLogin,
+    UserPreferencesViewSet,
 )
-from rest_framework import routers
+from rest_framework.routers import DefaultRouter
 
 
 app_name = "users"
 
-router = routers.SimpleRouter()
-router.register("users", AdminUserViewSet, basename="users")
+router = DefaultRouter()
+router.register(r"admin/users", AdminUserViewSet, basename="admin_users")
+router.register(r"preferences", UserPreferencesViewSet, basename="user_preferences")
 
 
 urlpatterns = [

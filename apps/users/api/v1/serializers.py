@@ -1,22 +1,15 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
+from apps.users.models import UserPreferences
 
 User = get_user_model()
+
 
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            "id",
-            "email",
-            "first_name",
-            "last_name",
-            "is_active",
-            "is_staff",
-            "is_superuser",
-            "user_type"
-        )
+        fields = ("id", "email", "first_name", "last_name", "is_active", "is_staff", "is_superuser", "user_type")
         read_only_fields = ("id",)
 
 
@@ -29,12 +22,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ("email", "password", "password2", "first_name", "last_name")
 
     def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
+        if attrs["password"] != attrs["password2"]:
             raise serializers.ValidationError({"password": "Passwords must match"})
         return attrs
 
     def create(self, validated_data):
-        validated_data.pop('password2')
+        validated_data.pop("password2")
         user = User.objects.create_user(**validated_data)
         return user
 
@@ -57,3 +50,21 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     uidb64 = serializers.CharField()
     token = serializers.CharField()
     new_password = serializers.CharField(write_only=True, validators=[validate_password])
+
+
+class UserPreferencesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPreferences
+        fields = (
+            "id",
+            "user",
+            "language",
+            "notification",
+            "interest_history_score",
+            "interest_food_score",
+            "interest_architecture_score",
+            "interest_nature_score",
+            "narration_length_default",
+            "walking_speed_estimate",
+        )
+        read_only_fields = ("id", "user")
