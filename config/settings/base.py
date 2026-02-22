@@ -71,7 +71,7 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount.providers.google",
 ]
 
-CUSTOM_APPS = ["apps.users"]
+CUSTOM_APPS = ["apps.users", "apps.tour"]
 
 INSTALLED_APPS = DEFAULT_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
 
