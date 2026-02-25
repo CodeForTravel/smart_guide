@@ -1,11 +1,12 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from apps.tour.api.v1.views import CityViewSet
 
 app_name = "tour"
 
 router = DefaultRouter()
-# router.register(r"tours", TourViewSet, basename="tours")
+router.register(r"cities", CityViewSet, basename="city")
 
 urlpatterns = [
-    # path("some-view/", SomeView.as_view(), name="some-view"),
-] + router.urls
+    path("", include(router.urls)),
+]

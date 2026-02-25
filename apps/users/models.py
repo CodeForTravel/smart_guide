@@ -86,6 +86,10 @@ class UserPreferences(models.Model):
     interest_nature_score = models.IntegerField(default=5, validators=[MinValueValidator(0), MaxValueValidator(10)])
     narration_length_default = models.IntegerField(default=400)
     walking_speed_estimate = models.IntegerField(default=4)  # in km/h
+    # TODO: add preferred_tone choices class and update the model and API
+    # preferred_tone = models.CharField(
+    #     max_length=20, default="casual", choices=[("casual", "Casual"), ("formal", "Formal")]
+    # )
 
     def __str__(self):
         return f"{self.user.email} Preferences"
