@@ -69,6 +69,7 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "drf_spectacular",
 ]
 
 CUSTOM_APPS = ["apps.users", "apps.tour", "apps.chat"]
@@ -163,6 +164,16 @@ AUTH_USER_MODEL = "users.CustomUser"
 # settings for rest framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Smart Guide API",
+    "DESCRIPTION": "Interactive documentation for the AI Tour Guide",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # This automatically groups endpoints by the folder/app name after /api/v1/
+    "SCHEMA_PATH_PREFIX": r"/api/v[0-9]+/",
 }
 
 # settings for rest framework simple jwt
