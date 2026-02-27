@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.tour.models import City, POI, TourPlan, TourPlanPOI
+from apps.tour.models import City, POI, TourPlan, TourPlanPOI, TourSession
 
 
 class CitySerializer(serializers.ModelSerializer):
@@ -58,3 +58,20 @@ class TourPlanSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
+
+
+class TourSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TourSession
+        fields = [
+            "id",
+            "user",
+            "city",
+            "tour_plan",
+            "session_type",
+            "start_time",
+            "end_time",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "user", "start_time", "created_at", "updated_at"]

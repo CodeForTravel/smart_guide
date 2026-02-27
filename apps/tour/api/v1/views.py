@@ -1,8 +1,8 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
-from apps.tour.models import City, TourPlan, POI
-from apps.tour.api.v1.serializers import CitySerializer, TourPlanSerializer, POISerializer
+from apps.tour.models import City, TourPlan, POI, TourSession
+from apps.tour.api.v1.serializers import CitySerializer, TourPlanSerializer, POISerializer, TourSessionSerializer
 from apps.tour.filters import TourPlanFilter, POIFilter
 
 
@@ -40,3 +40,22 @@ class POIViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = POIFilter
+
+
+class TourSessionViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for viewing and creating TourSessions.
+    Users can only view and manage their own sessions.
+    """
+
+    serializer_class = TourSessionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Prevent swagger generation from throwing an exception with AnonymousUser
+        if getattr(self, "swagger_fake_view", False):
+            return TourSession.objects.none()
+        return TourSession.objects.filter(user=self.request.user).order_by("-start_time")
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
