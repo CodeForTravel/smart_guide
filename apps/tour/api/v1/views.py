@@ -1,7 +1,9 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
 from apps.tour.models import City, TourPlan, POI
 from apps.tour.api.v1.serializers import CitySerializer, TourPlanSerializer, POISerializer
+from apps.tour.filters import TourPlanFilter, POIFilter
 
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -24,14 +26,8 @@ class TourPlanViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TourPlan.objects.prefetch_related("plan_pois__poi", "city").filter(is_active=True)
     serializer_class = TourPlanSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get_queryset(self):
-        """Allow filtering tour plans by city_id"""
-        queryset = super().get_queryset()
-        city_id = self.request.query_params.get("city_id")
-        if city_id:
-            queryset = queryset.filter(city_id=city_id)
-        return queryset
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TourPlanFilter
 
 
 class POIViewSet(viewsets.ReadOnlyModelViewSet):
@@ -42,18 +38,5 @@ class POIViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = POI.objects.select_related("city").filter(is_active=True)
     serializer_class = POISerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get_queryset(self):
-        """Allow filtering POIs by city_id and curated status"""
-        queryset = super().get_queryset()
-        city_id = self.request.query_params.get("city_id")
-        curated = self.request.query_params.get("curated")
-
-        if city_id:
-            queryset = queryset.filter(city_id=city_id)
-        if curated is not None:
-            # Convert string 'true'/'false' to boolean
-            is_curated = str(curated).lower() in ["true", "1", "t"]
-            queryset = queryset.filter(curated=is_curated)
-
-        return queryset
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = POIFilter
