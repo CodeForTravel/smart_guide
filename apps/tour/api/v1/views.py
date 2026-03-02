@@ -1,9 +1,11 @@
 from rest_framework import viewsets, permissions
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS
 from django_filters.rest_framework import DjangoFilterBackend
 from apps.tour.models import City, TourPlan, POI, TourSession
 from apps.tour.api.v1.serializers import CitySerializer, TourPlanSerializer, POISerializer, TourSessionSerializer
 from apps.tour.filters import TourPlanFilter, POIFilter
+from apps.tour.services import create_tour_plan, update_tour_plan
+from common.permissions import IsSystemAdmin
 
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -17,19 +19,6 @@ class CityViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-class TourPlanViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    API endpoint for viewing pre-defined Curated Routes.
-    Returns the TourPlan along with its ordered list of POIs.
-    """
-
-    queryset = TourPlan.objects.prefetch_related("plan_pois__poi", "city").filter(is_active=True)
-    serializer_class = TourPlanSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = TourPlanFilter
-
-
 class POIViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint for viewing Points of Interest.
@@ -40,6 +29,35 @@ class POIViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = POIFilter
+
+
+class TourPlanViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for viewing and managing pre-defined Curated Routes.
+    - Read (list/retrieve): open to any authenticated or anonymous user.
+    - Write (create/update/delete): restricted to admin/staff users only.
+    Business logic is delegated to apps.tour.services.
+    """
+
+    queryset = TourPlan.objects.prefetch_related("plan_pois__poi", "city").filter(is_active=True)
+    serializer_class = TourPlanSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TourPlanFilter
+
+    def get_permissions(self):
+        if self.request.method in SAFE_METHODS:
+            return [IsAuthenticatedOrReadOnly()]
+        return [permissions.IsAuthenticated(), IsSystemAdmin()]
+
+    def perform_create(self, serializer):
+        tour_plan = create_tour_plan(serializer.validated_data)
+        # Re-assign instance so the response is serialized correctly
+        serializer.instance = tour_plan
+
+    def perform_update(self, serializer):
+        updated_instance = update_tour_plan(serializer.instance, serializer.validated_data)
+        # Keep serializer.instance in sync so the response reflects the updated data
+        serializer.instance = updated_instance
 
 
 class TourSessionViewSet(viewsets.ModelViewSet):

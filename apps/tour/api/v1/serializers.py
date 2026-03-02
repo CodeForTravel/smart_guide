@@ -33,6 +33,8 @@ class POISerializer(serializers.ModelSerializer):
 
 
 class TourPlanPOISerializer(serializers.ModelSerializer):
+    """Used for reading (GET): returns full nested POI details."""
+
     poi = POISerializer(read_only=True)
 
     class Meta:
@@ -40,10 +42,23 @@ class TourPlanPOISerializer(serializers.ModelSerializer):
         fields = ["id", "poi", "order"]
 
 
+class TourPlanPOIWriteSerializer(serializers.ModelSerializer):
+    """Used for writing (POST/PUT/PATCH): accepts a POI id and an order."""
+
+    poi_id = serializers.PrimaryKeyRelatedField(queryset=POI.objects.all(), source="poi")
+
+    class Meta:
+        model = TourPlanPOI
+        fields = ["poi_id", "order"]
+
+
 class TourPlanSerializer(serializers.ModelSerializer):
-    # Nested representation to show the exact list of POIs in order
+    # Read: returns full nested POI objects in order
     plan_pois = TourPlanPOISerializer(many=True, read_only=True)
     city_name = serializers.CharField(source="city.name", read_only=True)
+
+    # Write: accepts a list of {poi_id, order} objects
+    pois_data = TourPlanPOIWriteSerializer(many=True, write_only=True, required=False)
 
     class Meta:
         model = TourPlan
@@ -55,6 +70,7 @@ class TourPlanSerializer(serializers.ModelSerializer):
             "description",
             "estimated_duration_minutes",
             "plan_pois",
+            "pois_data",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
