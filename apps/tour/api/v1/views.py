@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from apps.tour.models import City, TourPlan, POI, TourSession
 from apps.tour.api.v1.serializers import CitySerializer, TourPlanSerializer, POISerializer, TourSessionSerializer
 from apps.tour.filters import TourPlanFilter, POIFilter
-from apps.tour.services import create_tour_plan, update_tour_plan
+from apps.tour.services import TourPlanService
 from common.permissions import IsSystemAdmin
 
 
@@ -44,20 +44,18 @@ class TourPlanViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = TourPlanFilter
 
+    tour_plan_service = TourPlanService()
+
     def get_permissions(self):
         if self.request.method in SAFE_METHODS:
             return [IsAuthenticatedOrReadOnly()]
         return [permissions.IsAuthenticated(), IsSystemAdmin()]
 
     def perform_create(self, serializer):
-        tour_plan = create_tour_plan(serializer.validated_data)
-        # Re-assign instance so the response is serialized correctly
-        serializer.instance = tour_plan
+        serializer.instance = self.tour_plan_service.create(serializer.validated_data)
 
     def perform_update(self, serializer):
-        updated_instance = update_tour_plan(serializer.instance, serializer.validated_data)
-        # Keep serializer.instance in sync so the response reflects the updated data
-        serializer.instance = updated_instance
+        serializer.instance = self.tour_plan_service.update(serializer.instance, serializer.validated_data)
 
 
 class TourSessionViewSet(viewsets.ModelViewSet):
