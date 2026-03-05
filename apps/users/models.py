@@ -75,8 +75,14 @@ class UserPreferences(models.Model):
         RU = "ru", "Russian"
         ZH = "zh", "Chinese"
 
+    class ToneChoices(models.TextChoices):
+        CASUAL = "casual", "Casual"
+        ACADEMIC = "academic", "Academic"
+        STORYTELLING = "storytelling", "Storytelling"
+
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     language = models.CharField(max_length=2, default=LanguageChoices.EN, choices=LanguageChoices.choices)
+    preferred_tone = models.CharField(max_length=50, default=ToneChoices.CASUAL, choices=ToneChoices.choices)
     notification = models.BooleanField(default=True)
     interest_history_score = models.IntegerField(default=5, validators=[MinValueValidator(0), MaxValueValidator(10)])
     interest_food_score = models.IntegerField(default=5, validators=[MinValueValidator(0), MaxValueValidator(10)])
@@ -86,10 +92,7 @@ class UserPreferences(models.Model):
     interest_nature_score = models.IntegerField(default=5, validators=[MinValueValidator(0), MaxValueValidator(10)])
     narration_length_default = models.IntegerField(default=400)
     walking_speed_estimate = models.IntegerField(default=4)  # in km/h
-    # TODO: add preferred_tone choices class and update the model and API
-    # preferred_tone = models.CharField(
-    #     max_length=20, default="casual", choices=[("casual", "Casual"), ("formal", "Formal")]
-    # )
+    skip_visited_pois = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.user.email} Preferences"

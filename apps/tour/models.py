@@ -23,6 +23,14 @@ class POI(BaseModel):
         ARCHITECTURE = "architecture", "Architecture"
         NATURE = "nature", "Nature"
         CULTURE = "culture", "Culture"
+        # Suggested additions
+        ART = "art", "Art & Galleries"
+        RELIGION = "religion", "Religious Site"
+        SHOPPING = "shopping", "Shopping & Markets"
+        NIGHTLIFE = "nightlife", "Nightlife & Bars"
+        SPORT = "sport", "Sport & Stadiums"
+        VIEWPOINT = "viewpoint", "Viewpoint & Panorama"
+        STREET_ART = "street_art", "Street Art"
 
     city = models.ForeignKey(City, on_delete=models.CASCADE, related_name="pois")
     category = models.CharField(max_length=100, blank=True, null=True, choices=POICategory.choices)
