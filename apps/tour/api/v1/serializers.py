@@ -77,6 +77,8 @@ class TourPlanSerializer(serializers.ModelSerializer):
 
 
 class TourSessionSerializer(serializers.ModelSerializer):
+    chat_thread_id = serializers.IntegerField(source="chat_thread.id", read_only=True)
+
     class Meta:
         model = TourSession
         fields = [
@@ -87,6 +89,7 @@ class TourSessionSerializer(serializers.ModelSerializer):
             "session_type",
             "start_time",
             "end_time",
+            "chat_thread_id",
             "created_at",
             "updated_at",
         ]

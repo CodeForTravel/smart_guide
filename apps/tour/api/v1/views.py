@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from apps.tour.models import City, TourPlan, POI, TourSession
 from apps.tour.api.v1.serializers import CitySerializer, TourPlanSerializer, POISerializer, TourSessionSerializer
 from apps.tour.filters import TourPlanFilter, POIFilter
-from apps.tour.services import TourPlanService
+from apps.tour.services import TourPlanService, TourSessionService
 from common.permissions import IsSystemAdmin
 
 
@@ -62,16 +62,20 @@ class TourSessionViewSet(viewsets.ModelViewSet):
     """
     API endpoint for viewing and creating TourSessions.
     Users can only view and manage their own sessions.
+    Creating a session also creates a linked ChatThread and enforces
+    a one-active-session rule (returns 400 if one already exists).
     """
 
     serializer_class = TourSessionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    tour_session_service = TourSessionService()
 
     def get_queryset(self):
         # Prevent swagger generation from throwing an exception with AnonymousUser
         if getattr(self, "swagger_fake_view", False):
             return TourSession.objects.none()
-        return TourSession.objects.filter(user=self.request.user).order_by("-start_time")
+        return TourSession.objects.select_related("chat_thread").filter(user=self.request.user).order_by("-start_time")
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        session = self.tour_session_service.create(self.request.user, serializer.validated_data)
+        serializer.instance = session

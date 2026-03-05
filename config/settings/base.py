@@ -71,6 +71,7 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount.providers.google",
     "drf_spectacular",
     "django_filters",
+    "channels",
 ]
 
 CUSTOM_APPS = ["apps.users", "apps.tour", "apps.chat"]
@@ -106,6 +107,18 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+REDIS_URL = env.str("REDIS_URL", default="redis://localhost:6379")
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
+        },
+    }
+}
 
 
 # Database
